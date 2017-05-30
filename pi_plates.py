@@ -46,43 +46,37 @@ try:
 
     fanOn = False
 
+    loopCount = 0
     while continue1 == True:
 
         loopLine = line
 
-        tmp1 = 100 * DAQC.getADC(0, 0) - 50
-        tmp1 = round(tmp1, 1)
-        tmp2 = 100 * DAQC.getADC(0, 1) - 50
-        tmp2 = round(tmp2, 1)
-        tmp3 = 100 * DAQC.getADC(0, 2) - 50
-        tmp3 = round(tmp3, 1)
-        volts = DAQC.getADC(0, 3)
-        strtmp1 = str(tmp1)
-        strtmp2 = str(tmp2)
-        strtmp3 = str(tmp3)
-
-        if tmp1 > fanChangeTemp + fanDelta:
-            RELAY.relayON(0,3)
-            fanOn = True
-        elif tmp1 < fanChangeTemp - fanDelta:
-            RELAY.relayOFF(0,3)
-            fanOn = False
-
-        c = stdscr.getch()
-        if c == ord('p'):
-            stdscr.addstr(loopLine, 0, "tmp1: " + str(tmp1))
-            loopLine += 1
-            stdscr.addstr(loopLine, 0, "tmp2: " + str(tmp2))
-            loopLine += 1
-            stdscr.addstr(loopLine, 0, "tmp3: " + str(tmp3))
-            loopLine += 1
-
-        elif c == ord('q'):
+        readChar = stdscr.getch()
+        if readChar == ord('q'):
             stdscr.addstr(loopLine, 0, "Quit")
             loopLine += 1
             continue1 = False
 
-        else:
+        if loopCount > 9:
+            loopCount = 0
+            tmp1 = 100 * DAQC.getADC(0, 0) - 50
+            tmp1 = round(tmp1, 1)
+            tmp2 = 100 * DAQC.getADC(0, 1) - 50
+            tmp2 = round(tmp2, 1)
+            tmp3 = 100 * DAQC.getADC(0, 2) - 50
+            tmp3 = round(tmp3, 1)
+            volts = DAQC.getADC(0, 3)
+            strtmp1 = str(tmp1)
+            strtmp2 = str(tmp2)
+            strtmp3 = str(tmp3)
+
+            if tmp1 > fanChangeTemp + fanDelta:
+                RELAY.relayON(0,3)
+                fanOn = True
+            elif tmp1 < fanChangeTemp - fanDelta:
+                RELAY.relayOFF(0,3)
+                fanOn = False
+
             stdscr.addstr(loopLine, 0, "tmp1: " + str(tmp1))
             loopLine += 1
             stdscr.addstr(loopLine, 0, "tmp2: " + str(tmp2))
@@ -103,8 +97,10 @@ try:
             loopLine += 1
             stdscr.addstr(loopLine, 0, "datetime: " + str(datetime.now()))
             loopLine += 1
+        else:
+            loopCount += 1
 
-            time.sleep(10)
+        time.sleep(1)
 finally:
     curses.endwin()
 
