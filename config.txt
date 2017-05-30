@@ -1,0 +1,5 @@
+{
+    "url": "http://192.168.0.3:82/api/PiPlates",
+    "fanChangeTemp": 27.0,
+    "fanDelta": 0.35
+}
