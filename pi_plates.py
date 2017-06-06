@@ -47,12 +47,15 @@ try:
     url = configJson["url"]
     fanChangeTemp = configJson["fanChangeTemp"]
     fanDelta = configJson["fanDelta"]
-    
+    loopTime = configJson["loopTime"]
+
     stdscr.addstr(line, 0, "url: " + url)
     line += 1
     stdscr.addstr(line, 0, "fanChangeTemp: " + str(fanChangeTemp))
     line += 1
     stdscr.addstr(line, 0, "fanDelta: " + str(fanDelta))
+    line += 1
+    stdscr.addstr(line, 0, "loopTime: " + str(loopTime))
     line += 1
     line += 1
 
