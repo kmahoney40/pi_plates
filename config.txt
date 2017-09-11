@@ -1,6 +1,8 @@
 {
-    "url": "http://192.168.0.3:82/api/",
+    "url": "http://10.0.0.19:82/api/",
     "fanChangeTemp": 27.0,
     "fanDelta": 0.35,
-    "loopTime": 10
+    "voltageTrigger": 4,
+    "loopTime": 19,
+    "alpha": 0.75
 }

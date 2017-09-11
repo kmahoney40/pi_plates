@@ -13,14 +13,41 @@ from decimal import Decimal
 
 
 def getDoorCmnd(line):
-    headers = { 'content-type': 'application/json' }
+
+    line += 1
+    stdscr.addstr(line, 0, "BEGIN: getDoorCmnd")
+    line += 1
+    h = { 'content-type': 'application/json' }
     fullUrl = url + 'door'
-    stdscr.addstr(line, 0, fullUrl)
+    stdscr.addstr(line, 0, "fullurl: " + fullUrl)
     line += 1
-    ret = requests.get(fullUrl, headers=headers)
-    stdscr.addstr(line, 0, str(ret.status_code) + ": " + str(ret.text) )
+    ret = requests.get(url + 'door')
+    doorCmnd = False;
+    
+    #retJson = json.loads(ret)
+
+    stdscr.addstr(line, 0, str(ret.text))
+    #RELAY.relayTOGGLE(0, 5)
+    if str(ret.text).find('true') > -1:
+#    if(False):
+    #if str(ret.text["door"]) == 'true':
+        doorCmnd = True
+        RELAY.relayON(0, 5)
+    else:
+        doorCmnd = False;
+        RELAY.relayOFF(0, 5)
+
+    #stdscr.addstr(line, 0, str(ret.status_code) + ": " + str(ret.text))
     line += 1
-    return
+
+    
+    #if ret["door"] == "true":
+    #    payload = {"door": true}
+    #    ret2 = requeses.post(fullUrl, json = json.dumps(payload), headers=headers)
+    stdscr.addstr(line, 0, "END: getDoorCmnd")
+    line += 2
+
+    return line
 
 try:
     stdscr = curses.initscr()
@@ -35,19 +62,22 @@ try:
     stdscr.addstr(line, 0, RELAY.getID(0))
     line += 1
     RELAY.relayOFF(0,3)
+    RELAY.relayOFF(0, 5)
 
     configFile = open("config.txt", "r")
 
     configData = configFile.read()
     stdscr.addstr(line, 0, configData)
-    line += 5
+    line += 8
 
     configJson = json.loads(configData)
     
     url = configJson["url"]
     fanChangeTemp = configJson["fanChangeTemp"]
     fanDelta = configJson["fanDelta"]
+    voltageTrigger = configJson["voltageTrigger"]
     loopTime = configJson["loopTime"]
+    alpha = configJson["alpha"]
 
     stdscr.addstr(line, 0, "url: " + url)
     line += 1
@@ -62,11 +92,24 @@ try:
     headers = { 'content-type': 'application/json' }
     
     fanOn = False
+    chargerOn = False
 
+    fTemp1 = 0.0
+    fTemp2 = 0.0
+    fTemp3 = 0.0
+    fVolts = 0.0
     loopCount = 0
+    timeNow = time.time()
     while continue1 == True:
 
+        #RELAY.relayON(0, 5)
+        
         loopLine = line
+
+        timeNow = time.time()
+        stdscr.addstr(loopLine, 0, str(timeNow))
+        loopLine += 1
+        loopLine += 1
 
         readChar = stdscr.getch()
         if readChar == ord('q'):
@@ -75,12 +118,9 @@ try:
             continue1 = False
 
         if loopCount % 2 == 0:
-            getDoorCmnd(line)
-            loopLine += 1
-            loopLine += 1
-
-        if continue1 and loopCount > 9:
-            loopCount = 0
+            loopLine = getDoorCmnd(loopLine)
+            #loopLine += 1
+            #loopLine += 1
 
             tmp1 = 100 * DAQC.getADC(0, 0) - 50
             tmp1 = round(tmp1, 1)
@@ -89,27 +129,77 @@ try:
             tmp3 = 100 * DAQC.getADC(0, 2) - 50
             tmp3 = round(tmp3, 1)
             volts = DAQC.getADC(0, 3)
-            strtmp1 = str(tmp1)
-            strtmp2 = str(tmp2)
-            strtmp3 = str(tmp3)
 
-            if tmp1 > fanChangeTemp + fanDelta:
+            stdscr.addstr(loopLine, 0, "rawTmp1: " + str(tmp1))
+            loopLine += 1
+            stdscr.addstr(loopLine, 0, "rawTmp2: " + str(tmp2))
+            loopLine += 1
+            stdscr.addstr(loopLine, 0, "rawTmp3: " + str(tmp2))
+            loopLine += 1
+
+            fTemp1 = (1 - alpha) * tmp1 + alpha * fTemp1
+            fTemp1 = round(fTemp1, 1)
+            fTemp2 = (1 - alpha) * tmp2 + alpha * fTemp2
+            fTemp2 = round(fTemp1, 2)
+            fTemp3 = (1 - alpha) * tmp3 + alpha * fTemp3
+            fTemp3 = round(fTemp3, 1)
+
+            fVolts = (1 - alpha) * volts + alpha * fVolts
+            fVolts = round(fVolts, 1)
+
+            stdscr.addstr(loopLine, 0, "filteredTmp1: " + str(fTemp1))
+            loopLine += 1
+            stdscr.addstr(loopLine, 0, "filteredTmp2: " + str(fTemp2))
+            loopLine += 1
+            stdscr.addstr(loopLine, 0, "filteredTmp3: " + str(fTemp3))
+            loopLine += 1
+
+        if continue1 and loopCount > loopTime:
+            loopCount = 0
+
+            #itmp1 = 100 * DAQC.getADC(0, 0) - 50
+            #tmp1 = round(tmp1, 1)
+            #tmp2 = 100 * DAQC.getADC(0, 1) - 50
+            #tmp2 = round(tmp2, 1)
+            #tmp3 = 100 * DAQC.getADC(0, 2) - 50
+            #tmp3 = round(tmp3, 1)
+            #volts = DAQC.getADC(0, 3)
+            strtmp1 = str(fTemp1)
+            strtmp2 = str(fTemp2)
+            strtmp3 = str(fTemp3)
+
+            stdscr.addstr(loopLine, 0, "sentTmp1: " + strtmp1)
+            loopLine += 1
+            stdscr.addstr(loopLine, 0, "sentTmp2: " + strtmp2)
+            loopLine += 1
+            stdscr.addstr(loopLine, 0, "sentTmp3: " + strtmp3)
+            loopLine += 1
+
+            if fVolts < voltageTrigger:
+                RELAY.relayON(0,7)
+                chargerOn = True
+            else:
+                RELAY.relayOFF(0,7)
+                chargerOn = False
+
+
+            if fTemp1 > fanChangeTemp + fanDelta:
                 RELAY.relayON(0,3)
                 fanOn = True
-            elif tmp1 < fanChangeTemp - fanDelta:
+            elif fTemp1 < fanChangeTemp - fanDelta:
                 RELAY.relayOFF(0,3)
                 fanOn = False
 
-            stdscr.addstr(loopLine, 0, "tmp1: " + str(tmp1))
-            loopLine += 1
-            stdscr.addstr(loopLine, 0, "tmp2: " + str(tmp2))
-            loopLine += 1
-            stdscr.addstr(loopLine, 0, "tmp3: " + str(tmp3))
-            loopLine += 1
+#            stdscr.addstr(loopLine, 0, "tmp1: " + strtmp1)
+#            loopLine += 1
+#            stdscr.addstr(loopLine, 0, "tmp2: " + strtmp2)
+#            loopLine += 1
+#            stdscr.addstr(loopLine, 0, "tmp3: " + strtmp3)
+#            loopLine += 1
 
-            payload = {"TEMP_1":tmp1, "TEMP_2":tmp2, "TEMP_3":tmp3, "FAN_ON": fanOn, "VOLTAGE": volts, "GMT": str(datetime.now(pytz.utc))}
+            payload = {"TEMP_1":fTemp1, "TEMP_2":fTemp2, "TEMP_3":fTemp3, "FAN_ON": fanOn, "CHARGER_ON": chargerOn, "VOLTAGE": fVolts, "GMT": str(datetime.now(pytz.utc))}
             stdscr.addstr(loopLine, 0, "payload: " + json.dumps(payload))
-            loopLine += 1
+            loopLine += 2
 
             stdscr.addstr(loopLine, 0, "state: " + str(RELAY.relaySTATE(0)))
             loopLine += 1
