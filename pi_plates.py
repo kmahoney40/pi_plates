@@ -14,40 +14,49 @@ from decimal import Decimal
 
 def getDoorCmnd(line):
 
-    line += 1
-    stdscr.addstr(line, 0, "BEGIN: getDoorCmnd")
-    line += 1
-    h = { 'content-type': 'application/json' }
-    fullUrl = url + 'door'
-    stdscr.addstr(line, 0, "fullurl: " + fullUrl)
-    line += 1
-    ret = requests.get(url + 'door')
-    doorCmnd = False;
-    
-    #retJson = json.loads(ret)
-
-    stdscr.addstr(line, 0, str(ret.text))
-    #RELAY.relayTOGGLE(0, 5)
-    if str(ret.text).find('true') > -1:
-#    if(False):
-    #if str(ret.text["door"]) == 'true':
-        doorCmnd = True
-        RELAY.relayON(0, 5)
-    else:
+    try:
+        line += 1
+        stdscr.addstr(line, 0, "BEGIN: getDoorCmnd")
+        line += 1
+        h = { 'content-type': 'application/json' }
+        fullUrl = url + 'door'
+        stdscr.addstr(line, 0, "fullurl: " + fullUrl)
+        line += 1
+        ret = requests.get(url + 'door')
         doorCmnd = False;
-        RELAY.relayOFF(0, 5)
 
-    #stdscr.addstr(line, 0, str(ret.status_code) + ": " + str(ret.text))
-    line += 1
+        stdscr.addstr(line, 0, str(ret.text))
+        line += 1
 
+        if str(ret.text).find('true') > -1:
+
+
+            doorCmnd = True
+            RELAY.relayON(0, 5)
+        else:
+            doorCmnd = False;
+            RELAY.relayOFF(0, 5)
+
+        line += 1
     
-    #if ret["door"] == "true":
-    #    payload = {"door": true}
-    #    ret2 = requeses.post(fullUrl, json = json.dumps(payload), headers=headers)
-    stdscr.addstr(line, 0, "END: getDoorCmnd")
-    line += 2
+        #stdscr.addstr(line, 0, "END: getDoorCmnd")
 
+    except Exception, ex:
+        # pring the exception and keep going
+        stdscr.addstr(line, 0, "getDoorCmnd() outter exception: " + str(ex))
+        line += 2
+    else:
+        # all good do nothing
+        stdscr.addstr(line, 0, "getDoorCmnd() all good!")
+        line += 2
+    finally:
+        stdscr.addstr(line, 0, "END: getDoorCmmd() - " + str(datetime.utcnow()))
+        line += 2
     return line
+
+# END getDoorCmnd() function
+
+
 
 try:
     stdscr = curses.initscr()
@@ -109,6 +118,7 @@ try:
         timeNow = time.time()
         stdscr.addstr(loopLine, 0, str(timeNow))
         loopLine += 1
+        stdscr.addstr(loopLine, 0, str(datetime.utcnow()))
         loopLine += 1
 
         readChar = stdscr.getch()
@@ -134,13 +144,15 @@ try:
             loopLine += 1
             stdscr.addstr(loopLine, 0, "rawTmp2: " + str(tmp2))
             loopLine += 1
-            stdscr.addstr(loopLine, 0, "rawTmp3: " + str(tmp2))
+            stdscr.addstr(loopLine, 0, "rawTmp3: " + str(tmp3))
             loopLine += 1
 
             fTemp1 = (1 - alpha) * tmp1 + alpha * fTemp1
             fTemp1 = round(fTemp1, 1)
+
             fTemp2 = (1 - alpha) * tmp2 + alpha * fTemp2
-            fTemp2 = round(fTemp1, 2)
+            fTemp2 = round(fTemp2, 1)
+
             fTemp3 = (1 - alpha) * tmp3 + alpha * fTemp3
             fTemp3 = round(fTemp3, 1)
 
@@ -197,7 +209,8 @@ try:
 #            stdscr.addstr(loopLine, 0, "tmp3: " + strtmp3)
 #            loopLine += 1
 
-            payload = {"TEMP_1":fTemp1, "TEMP_2":fTemp2, "TEMP_3":fTemp3, "FAN_ON": fanOn, "CHARGER_ON": chargerOn, "VOLTAGE": fVolts, "GMT": str(datetime.now(pytz.utc))}
+            payload = {"TEMP_1":fTemp1, "TEMP_2":fTemp2, "TEMP_3":fTemp3, "FAN_ON": fanOn, "CHARGER_ON": chargerOn, "VOLTAGE": fVolts, "GMT": str(datetime.utcnow())}
+#str(datetime.now(pytz.utc))}
             stdscr.addstr(loopLine, 0, "payload: " + json.dumps(payload))
             loopLine += 2
 
@@ -205,11 +218,23 @@ try:
             loopLine += 1
 
             #headers = { 'content-type': 'application/json' }
-            ret = requests.post(url + 'piplates', json=json.dumps(payload), headers=headers)
-            stdscr.addstr(loopLine, 0, "return: " + str(ret.status_code) + " " + ret.text)
-            loopLine += 1
-            stdscr.addstr(loopLine, 0, "datetime: " + str(datetime.now(pytz.utc)))
-            loopLine += 1
+            try:
+                ret = requests.post(url + 'piplates', json=json.dumps(payload), headers=headers)
+                stdscr.addstr(loopLine, 0, "return: " + str(ret.status_code) + " " + ret.text)
+            except Exception, ex:
+                loopLine += 1
+                stdscr.addstr(loopLine, 0, "request.post : " + payload + " exception.")
+                loopLine += 1
+                stdscr.addstr(loopLine, 0, "Exception: " + str(ex))
+                loopLine += 1
+            else:
+                loopLine += 1
+                stdscr.addstr(loopLine, 0, "All good")
+                loopLine += 2
+            finally:
+                loopLine += 1
+                stdscr.addstr(loopLine, 0, "datetime: " + str(datetime.now(pytz.utc)))
+                loopLine += 2
         else:
             loopCount += 1
 
