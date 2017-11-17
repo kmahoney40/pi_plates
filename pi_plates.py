@@ -19,8 +19,27 @@ def getDoorCmnd(line):
         
         localLine += 1
         stdscr.addstr(line + localLine, 0, "BEGIN: getDoorCmnd")
-        # 1
-        #stdscr.addstr(line, 0, "END: getDoorCmnd")
+        localLine += 1
+
+        h = { 'content-type': 'application/json' }
+        fullUrl = url + 'door'
+        stdscr.addstr(line + localLine, 0, "fullurl: " + fullUrl)
+        localLine += 1
+        ret = requests.get(url + 'door')
+        #doorCmnd = False;
+
+        stdscr.addstr(line + localLine, 0, str(ret.text))
+        localLine += 1
+
+        if str(ret.text).find('true') > -1:
+            #doorCmnd = True
+            RELAY.relayON(0, 5)
+        else:
+            #doorCmnd = False;
+            RELAY.relayOFF(0, 5)
+
+        localLine += 1
+
 
     except Exception, ex:
         # pring the exception and keep going
@@ -111,7 +130,7 @@ try:
             loopLine += 1
             continue1 = False
 
-        if loopCount % 2 == 0:
+        if loopCount % 3 == 0:
             ll = loopLine
             #stdscr.addstr(50, 0, "loopLine: " + str(loopLine))
             lll = getDoorCmnd(ll)
@@ -130,11 +149,12 @@ try:
             volts = DAQC.getADC(0, 3)
             stdscr.addstr(loopLine, 0, "inside loopCount loopLine: " + str(loopLine))
             loopLine += 1
+            loopCount = 0
         else:
-            loopLine += 8
+            loopLine += 12
             stdscr.addstr(loopLine, 0, "in loopCount else: " + str(loopLine) + "          ")
             loopLine += 1
-
+        loopCount += 1
         stdscr.addstr(loopLine, 0, "rawTmp1: " + str(tmp1))
         loopLine += 1
         stdscr.addstr(loopLine, 0, "rawTmp2: " + str(tmp2))
@@ -168,31 +188,11 @@ try:
         stdscr.addstr(loopLine, 0, "min: " + str(myMin) + " mod: " + str(myMin % 5) + " tempfanCounter: " + str(tempFanCounter) )
         loopLine += 2
 
-        if myMin % 5 == 0 and tempFanCounter == 0:
+        if myMin % 15 == 0 and tempFanCounter == 0:
             tempFanCounter = 1
             stdscr.addstr(loopLine, 0, "tempFanCounter inside" + str(tempFanCounter) + "          ")
             loopLine += 1
-        else:
-            if tempFanCounter > 0:
-                tempFanCounter += 1
-                if tempFanCounter > 60:
-                    tempFanCounter = 0
-#                tempFanCounter += 1
-            stdscr.addstr(loopLine, 0, "tempFanCounter else: " + str(tempFanCounter) + "                    ")
-            loopLine += 1
 
-        loopLine += 1
-
-        if continue1 and loopCount > loopTime:
-            loopCount = 0
-
-            #itmp1 = 100 * DAQC.getADC(0, 0) - 50
-            #tmp1 = round(tmp1, 1)
-            #tmp2 = 100 * DAQC.getADC(0, 1) - 50
-            #tmp2 = round(tmp2, 1)
-            #tmp3 = 100 * DAQC.getADC(0, 2) - 50
-            #tmp3 = round(tmp3, 1)
-            #volts = DAQC.getADC(0, 3)
             strtmp1 = str(fTemp1)
             strtmp2 = str(fTemp2)
             strtmp3 = str(fTemp3)
@@ -205,36 +205,36 @@ try:
             loopLine += 1
 
             if fVolts < voltageTrigger:
-                RELAY.relayON(0,7)
+                RELAY.relayON(0, 7)
                 chargerOn = True
             else:
-                RELAY.relayOFF(0,7)
+                RELAY.relayOFF(0, 7)
                 chargerOn = False
 
-
             if fTemp1 > fanChangeTemp + fanDelta:
-                RELAY.relayON(0,3)
+                RELAY.relayON(0, 3)
                 fanOn = True
             elif fTemp1 < fanChangeTemp - fanDelta:
-                RELAY.relayOFF(0,3)
+                RELAY.relayOFF(0, 3)
                 fanOn = False
 
-#            stdscr.addstr(loopLine, 0, "tmp1: " + strtmp1)
-#            loopLine += 1
-#            stdscr.addstr(loopLine, 0, "tmp2: " + strtmp2)
-#            loopLine += 1
-#            stdscr.addstr(loopLine, 0, "tmp3: " + strtmp3)
-#            loopLine += 1
+                #            stdscr.addstr(loopLine, 0, "tmp1: " + strtmp1)
+                #            loopLine += 1
+                #            stdscr.addstr(loopLine, 0, "tmp2: " + strtmp2)
+                #            loopLine += 1
+                #            stdscr.addstr(loopLine, 0, "tmp3: " + strtmp3)
+                #            loopLine += 1
 
-            payload = {"TEMP_1":fTemp1, "TEMP_2":fTemp2, "TEMP_3":fTemp3, "FAN_ON": fanOn, "CHARGER_ON": chargerOn, "VOLTAGE": fVolts, "GMT": str(datetime.utcnow())}
-#str(datetime.now(pytz.utc))}
+            payload = {"TEMP_1": fTemp1, "TEMP_2": fTemp2, "TEMP_3": fTemp3, "FAN_ON": fanOn, "CHARGER_ON": chargerOn,
+                       "VOLTAGE": fVolts, "GMT": str(datetime.utcnow())}
+            # str(datetime.now(pytz.utc))}
             stdscr.addstr(loopLine, 0, "payload: " + json.dumps(payload))
             loopLine += 2
 
             stdscr.addstr(loopLine, 0, "state: " + str(RELAY.relaySTATE(0)))
             loopLine += 1
 
-            #headers = { 'content-type': 'application/json' }
+            # headers = { 'content-type': 'application/json' }
             try:
                 ret = requests.post(url + 'piplates', json=json.dumps(payload), headers=headers)
                 stdscr.addstr(loopLine, 0, "return: " + str(ret.status_code) + " " + ret.text)
@@ -253,9 +253,90 @@ try:
                 stdscr.addstr(loopLine, 0, "datetime: " + str(datetime.now(pytz.utc)))
                 loopLine += 2
         else:
-            loopCount += 1
+            if tempFanCounter > 0:
+                tempFanCounter += 1
+                if tempFanCounter > 60:
+                    tempFanCounter = 0
+#                tempFanCounter += 1
+            stdscr.addstr(loopLine, 0, "tempFanCounter else: " + str(tempFanCounter) + "                    ")
+            loopLine += 1
 
+        loopLine += 1
         time.sleep(1)
+
+        # if continue1 and loopCount > loopTime:
+        #     loopCount = 0
+
+            #itmp1 = 100 * DAQC.getADC(0, 0) - 50
+            #tmp1 = round(tmp1, 1)
+            #tmp2 = 100 * DAQC.getADC(0, 1) - 50
+            #tmp2 = round(tmp2, 1)
+            #tmp3 = 100 * DAQC.getADC(0, 2) - 50
+            #tmp3 = round(tmp3, 1)
+            #volts = DAQC.getADC(0, 3)
+#             strtmp1 = str(fTemp1)
+#             strtmp2 = str(fTemp2)
+#             strtmp3 = str(fTemp3)
+#
+#             stdscr.addstr(loopLine, 0, "sentTmp1: " + strtmp1)
+#             loopLine += 1
+#             stdscr.addstr(loopLine, 0, "sentTmp2: " + strtmp2)
+#             loopLine += 1
+#             stdscr.addstr(loopLine, 0, "sentTmp3: " + strtmp3)
+#             loopLine += 1
+#
+#             if fVolts < voltageTrigger:
+#                 RELAY.relayON(0,7)
+#                 chargerOn = True
+#             else:
+#                 RELAY.relayOFF(0,7)
+#                 chargerOn = False
+#
+#
+#             if fTemp1 > fanChangeTemp + fanDelta:
+#                 RELAY.relayON(0,3)
+#                 fanOn = True
+#             elif fTemp1 < fanChangeTemp - fanDelta:
+#                 RELAY.relayOFF(0,3)
+#                 fanOn = False
+#
+# #            stdscr.addstr(loopLine, 0, "tmp1: " + strtmp1)
+# #            loopLine += 1
+# #            stdscr.addstr(loopLine, 0, "tmp2: " + strtmp2)
+# #            loopLine += 1
+# #            stdscr.addstr(loopLine, 0, "tmp3: " + strtmp3)
+# #            loopLine += 1
+#
+#             payload = {"TEMP_1":fTemp1, "TEMP_2":fTemp2, "TEMP_3":fTemp3, "FAN_ON": fanOn, "CHARGER_ON": chargerOn, "VOLTAGE": fVolts, "GMT": str(datetime.utcnow())}
+# #str(datetime.now(pytz.utc))}
+#             stdscr.addstr(loopLine, 0, "payload: " + json.dumps(payload))
+#             loopLine += 2
+#
+#             stdscr.addstr(loopLine, 0, "state: " + str(RELAY.relaySTATE(0)))
+#             loopLine += 1
+#
+#             #headers = { 'content-type': 'application/json' }
+#             try:
+#                 ret = requests.post(url + 'piplates', json=json.dumps(payload), headers=headers)
+#                 stdscr.addstr(loopLine, 0, "return: " + str(ret.status_code) + " " + ret.text)
+#             except Exception, ex:
+#                 loopLine += 1
+#                 stdscr.addstr(loopLine, 0, "request.post : " + payload + " exception.")
+#                 loopLine += 1
+#                 stdscr.addstr(loopLine, 0, "Exception: " + str(ex))
+#                 loopLine += 1
+#             else:
+#                 loopLine += 1
+#                 stdscr.addstr(loopLine, 0, "All good")
+#                 loopLine += 2
+#             finally:
+#                 loopLine += 1
+#                 stdscr.addstr(loopLine, 0, "datetime: " + str(datetime.now(pytz.utc)))
+#                 loopLine += 2
+#         else:
+#             loopCount += 1
+
+        #time.sleep(1)
 finally:
     curses.endwin()
 
