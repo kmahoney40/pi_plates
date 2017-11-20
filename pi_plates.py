@@ -218,12 +218,12 @@ try:
                 RELAY.relayOFF(0, 3)
                 fanOn = False
 
-                #            stdscr.addstr(loopLine, 0, "tmp1: " + strtmp1)
-                #            loopLine += 1
-                #            stdscr.addstr(loopLine, 0, "tmp2: " + strtmp2)
-                #            loopLine += 1
-                #            stdscr.addstr(loopLine, 0, "tmp3: " + strtmp3)
-                #            loopLine += 1
+            stdscr.addstr(loopLine, 0, "tmp1: " + strtmp1)
+            loopLine += 1
+            stdscr.addstr(loopLine, 0, "tmp2: " + strtmp2)
+            loopLine += 1
+            stdscr.addstr(loopLine, 0, "tmp3: " + strtmp3)
+            loopLine += 1
 
             payload = {"TEMP_1": fTemp1, "TEMP_2": fTemp2, "TEMP_3": fTemp3, "FAN_ON": fanOn, "CHARGER_ON": chargerOn,
                        "VOLTAGE": fVolts, "GMT": str(datetime.utcnow())}
@@ -234,13 +234,14 @@ try:
             stdscr.addstr(loopLine, 0, "state: " + str(RELAY.relaySTATE(0)))
             loopLine += 1
 
-            # headers = { 'content-type': 'application/json' }
+            headers = { 'content-type': 'application/json' }
             try:
+                var = 2
                 ret = requests.post(url + 'piplates', json=json.dumps(payload), headers=headers)
                 stdscr.addstr(loopLine, 0, "return: " + str(ret.status_code) + " " + ret.text)
             except Exception, ex:
                 loopLine += 1
-                stdscr.addstr(loopLine, 0, "request.post : " + payload + " exception.")
+                #stdscr.addstr(loopLine, 0, "requests.post exception: " + ex.message)
                 loopLine += 1
                 stdscr.addstr(loopLine, 0, "Exception: " + str(ex))
                 loopLine += 1
@@ -250,7 +251,7 @@ try:
                 loopLine += 2
             finally:
                 loopLine += 1
-                stdscr.addstr(loopLine, 0, "datetime: " + str(datetime.now(pytz.utc)))
+                stdscr.addstr(loopLine, 0, "datetime: " + str(datetime.utcnow()))
                 loopLine += 2
         else:
             if tempFanCounter > 0:
