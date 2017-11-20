@@ -3,4 +3,6 @@
     "fanChangeTemp": 27.0,
     "fanDelta": 0.35,
     "voltageTrigger": 4,
-    "loopTime": 2929292929292929292929292929292929292929292929292929292929
+    "loopTime": 595,
+    "alpha": 0.75
+}
