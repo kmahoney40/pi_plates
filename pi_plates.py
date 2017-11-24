@@ -9,54 +9,8 @@ import curses
 import httplib
 import requests
 import json
+import door
 from decimal import Decimal
-
-
-def getDoorCmnd(line):
-
-    try:
-        localLine = 1
-        
-        localLine += 1
-        stdscr.addstr(line + localLine, 0, "BEGIN: getDoorCmnd")
-        localLine += 1
-
-        h = { 'content-type': 'application/json' }
-        fullUrl = url + 'door'
-        stdscr.addstr(line + localLine, 0, "fullurl: " + fullUrl)
-        localLine += 1
-        ret = requests.get(url + 'door')
-        #doorCmnd = False;
-
-        stdscr.addstr(line + localLine, 0, str(ret.text))
-        localLine += 1
-
-        if str(ret.text).find('true') > -1:
-            #doorCmnd = True
-            RELAY.relayON(0, 5)
-        else:
-            #doorCmnd = False;
-            RELAY.relayOFF(0, 5)
-
-        localLine += 1
-
-
-    except Exception, ex:
-        # pring the exception and keep going
-        stdscr.addstr(line + localLine, 0, "getDoorCmnd() outter exception: " + ex.message)
-        localLine += 3
-    else:
-        # all good do nothing
-        stdscr.addstr(line + localLine, 0, "getDoorCmnd() all good!")
-        localLine += 3
-    finally:
-        stdscr.addstr(line + localLine, 0, "END: getDoorCmmd() - " + str(datetime.utcnow()))
-        localLine += 3
-    return localLine
-
-# END getDoorCmnd() function
-
-
 
 try:
     stdscr = curses.initscr()
@@ -69,16 +23,16 @@ try:
     line = 1
     tempFanCounter = 0
 
-    stdscr.addstr(line, 0, RELAY.getID(0))
+    stdscr.addstr(line, 0, str(RELAY.getID(0)))
     line += 1
-    RELAY.relayOFF(0,3)
+    RELAY.relayOFF(0, 3)
     RELAY.relayOFF(0, 5)
 
     configFile = open("config.txt", "r")
 
     configData = configFile.read()
     stdscr.addstr(line, 0, configData)
-    line += 8
+    line += 10
 
     configJson = json.loads(configData)
     
@@ -110,6 +64,7 @@ try:
     fTemp3 = 0.0
     fVolts = 0.0
     tmp1 = tmp2 = tmp3 = 0
+    volts = 0
     timeNow = time.time()
     while continue1 == True:
 
@@ -132,9 +87,7 @@ try:
         mySec = myTime.tm_sec
 
         if mySec % modSec == 0:
-            ll = loopLine
-            lll = getDoorCmnd(ll)
-            loopLine += lll
+            loopLine += door.getDoorCmnd(loopLine, url)
 
             tmp1 = 100 * DAQC.getADC(0, 0) - 50
             tmp1 = round(tmp1, 1)
@@ -149,7 +102,6 @@ try:
             loopLine += 12
             stdscr.addstr(loopLine, 0, "in else no getDoorCmd() - mySec: " + str(mySec) + "          ")
             loopLine += 1
-
 
         fTemp1 = (1 - alpha) * tmp1 + alpha * fTemp1
         fTemp1 = round(fTemp1, 1)
@@ -171,10 +123,11 @@ try:
         loopLine += 1
 
         loopLine += 2
-        stdscr.addstr(loopLine, 0, "min: " + str(myMin) + " mod: " + str(myMin % 5) + " tempfanCounter: " + str(tempFanCounter) )
+        currentMod = myMin % modMin
+        stdscr.addstr(loopLine, 0, "min: " + str(myMin) + " mod: " + str(currentMod) + " tempfanCounter: " + str(tempFanCounter) )
         loopLine += 2
 
-        if myMin % modMin == 0 and tempFanCounter == 0:
+        if currentMod == 0 and tempFanCounter == 0:
             try:
                 tempFanCounter = 1
                 stdscr.addstr(loopLine, 0, "tempFanCounter inside" + str(tempFanCounter) + "          ")
@@ -246,4 +199,3 @@ try:
 
 finally:
     curses.endwin()
-

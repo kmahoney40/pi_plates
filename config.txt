@@ -3,7 +3,7 @@
     "fanChangeTemp": 27.0,
     "fanDelta": 0.35,
     "voltageTrigger": 4,
-    "alpha": 0.75,
-    "modMin": 2,
+    "alpha": 0.85,
+    "modMin": 15,
     "modSec": 2
 }
