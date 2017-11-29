@@ -55,7 +55,7 @@ try:
     line += 1
 
     headers = { 'content-type': 'application/json' }
-    
+    doorOverride = False
     fanOn = False
     chargerOn = False
 
@@ -66,6 +66,13 @@ try:
     tmp1 = tmp2 = tmp3 = 0
     volts = 0
     timeNow = time.time()
+
+
+    t1Arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    t2Arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    t3Arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    arr1Idx = arr2Idx = arr3Idx = 0
+
     while continue1 == True:
 
         loopLine = line
@@ -81,36 +88,65 @@ try:
             stdscr.addstr(loopLine, 0, "Quit")
             loopLine += 1
             continue1 = False
+        if readChar == ord('d'):
+            doorOverride = True
+    
 
         myTime = time.localtime(time.time())
         myMin = myTime.tm_min
         mySec = myTime.tm_sec
 
         if mySec % modSec == 0:
-            loopLine += door.getDoorCmnd(loopLine, url)
-
-            tmp1 = 100 * DAQC.getADC(0, 0) - 50
-            tmp1 = round(tmp1, 1)
-            tmp2 = 100 * DAQC.getADC(0, 1) - 50
-            tmp2 = round(tmp2, 1)
-            tmp3 = 100 * DAQC.getADC(0, 2) - 50
-            tmp3 = round(tmp3, 1)
-            volts = DAQC.getADC(0, 3)
-            stdscr.addstr(loopLine, 0, "inside call getDoorCmd() if - mySec: " + str(mySec))
-            loopLine += 1
+            loopLine += door.getDoorCmnd(loopLine, url, doorOverride)
+            doorOverride = False
         else:
-            loopLine += 12
-            stdscr.addstr(loopLine, 0, "in else no getDoorCmd() - mySec: " + str(mySec) + "          ")
-            loopLine += 1
+            loopLine += 11
+            stdscr.addstr(loopLine, 0, "in else no call to getDoorCmd() - mySec: " + str(mySec) + "          ")
+        loopLine += 1
+
+        tmp1 = 100 * DAQC.getADC(0, 0) - 50
+        tmp1 = round(tmp1, 1)
+        tmp2 = 0.0
+# 100 * DAQC.getADC(0, 1) - 50
+        tmp2 = round(tmp2, 1)
+        tmp3 = 100 * DAQC.getADC(0, 2) - 50
+        tmp3 = 0.0
+#round(tmp3, 1)
+        volts = DAQC.getADC(0, 3)
 
         fTemp1 = (1 - alpha) * tmp1 + alpha * fTemp1
         fTemp1 = round(fTemp1, 1)
 
+        t1Arr[arr1Idx] = fTemp1
+        if arr1Idx == 9:
+            arr1Idx = 0
+        else:
+            arr1Idx += 1
+
+        v1 = 0
+        for tmp in t1Arr:
+            v1 += tmp
+        v1 = v1 / 10
+        #stdscr.addstr(loopLine, 0, "v1: " + str(v1) + " arr1Idx: " + str(arr1Idx))
+        #loopLine += 1
+
         fTemp2 = (1 - alpha) * tmp2 + alpha * fTemp2
         fTemp2 = round(fTemp2, 1)
 
+        t2Arr[arr2Idx] = fTemp2
+        if arr2Idx == 9:
+            arr2Idx = 0
+        else:
+            arr2Idx += 1
+
         fTemp3 = (1 - alpha) * tmp3 + alpha * fTemp3
         fTemp3 = round(fTemp3, 1)
+
+        t3Arr[arr3Idx] = fTemp3
+        if arr3Idx == 9:
+            arr3Idx = 0
+        else:
+            arr3Idx += 1
 
         fVolts = (1 - alpha) * volts + alpha * fVolts
         fVolts = round(fVolts, 1)
@@ -124,7 +160,7 @@ try:
 
         loopLine += 2
         currentMod = myMin % modMin
-        stdscr.addstr(loopLine, 0, "min: " + str(myMin) + " mod: " + str(currentMod) + " tempfanCounter: " + str(tempFanCounter) )
+        stdscr.addstr(loopLine, 0, "min: " + str(myMin) + " sec: " + str(mySec) + " mod: " + str(currentMod) + " tempFanCounter: " + str(tempFanCounter) )
         loopLine += 2
 
         if currentMod == 0 and tempFanCounter == 0:
@@ -174,8 +210,7 @@ try:
                 ret = requests.post(url + 'piplates', json=json.dumps(payload), headers=headers)
                 stdscr.addstr(loopLine, 0, "return: " + str(ret.status_code) + " " + ret.text)
             except Exception, ex:
-                loopLine += 1
-                loopLine += 1
+                loopLine += 2
                 stdscr.addstr(loopLine, 0, "Exception: " + ex.message)
                 loopLine += 1
             else:
@@ -183,9 +218,9 @@ try:
                 stdscr.addstr(loopLine, 0, "Send temps all good")
                 loopLine += 1
             finally:
-                loopLine += 1
-                stdscr.addstr(loopLine, 0, "datetime: " + str(datetime.utcnow()))
                 loopLine += 2
+                stdscr.addstr(loopLine, 0, "datetime: " + str(datetime.utcnow()))
+                loopLine += 1
         else:
             if tempFanCounter > 0:
                 tempFanCounter += 1
