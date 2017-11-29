@@ -1,10 +1,11 @@
 import curses
+import time
 import piplates.DAQCplate as DAQC
 import piplates.RELAYplate as RELAY
 import requests
 from datetime import datetime
 
-def getDoorCmnd(line, url):
+def getDoorCmnd(line, url, override):
 
     try:
         stdscr = curses.initscr()
@@ -27,15 +28,14 @@ def getDoorCmnd(line, url):
         stdscr.addstr(line + localLine, 0, str(ret.text))
         localLine += 1
 
-        if str(ret.text).find('true') > -1:
+        if str(ret.text).find('true') < -1 or override == True:
             # doorCmnd = True
             RELAY.relayON(0, 5)
+            time.sleep(0.5)
+            RELAY.relayOFF(0, 5)
         else:
             # doorCmnd = False;
             RELAY.relayOFF(0, 5)
-
-        localLine += 1
-
 
     except Exception, ex:
         # pring the exception and keep going
@@ -49,3 +49,4 @@ def getDoorCmnd(line, url):
         stdscr.addstr(line + localLine, 0, "END: getDoorCmmd() - " + str(datetime.utcnow()))
         localLine += 3
     return localLine
+

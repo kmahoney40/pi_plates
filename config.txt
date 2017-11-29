@@ -5,5 +5,5 @@
     "voltageTrigger": 4,
     "alpha": 0.95,
     "modMin": 5,
-    "modSec": 2
+    "modSec": 10
 }
