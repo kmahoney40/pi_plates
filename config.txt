@@ -1,9 +1,9 @@
 {
     "url": "http://52.9.238.232:80/api/",
-    "fanChangeTemp": 37.0,
+    "fanChangeTemp": 37.5,
     "fanDelta": 0.35,
     "voltageTrigger": 4,
     "alpha": 0.95,
-    "modMin": 5,
-    "modSec": 10
+    "modMin": 10,
+    "modSec": 31
 }

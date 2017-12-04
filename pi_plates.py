@@ -106,12 +106,10 @@ try:
 
         tmp1 = 100 * DAQC.getADC(0, 0) - 50
         tmp1 = round(tmp1, 1)
-        tmp2 = 0.0
-# 100 * DAQC.getADC(0, 1) - 50
+        tmp2 = 100 * DAQC.getADC(0, 1) - 50
         tmp2 = round(tmp2, 1)
         tmp3 = 100 * DAQC.getADC(0, 2) - 50
-        tmp3 = 0.0
-#round(tmp3, 1)
+        tmp3 = round(tmp3, 1)
         volts = DAQC.getADC(0, 3)
 
         fTemp1 = (1 - alpha) * tmp1 + alpha * fTemp1
@@ -127,8 +125,6 @@ try:
         for tmp in t1Arr:
             v1 += tmp
         v1 = v1 / 10
-        #stdscr.addstr(loopLine, 0, "v1: " + str(v1) + " arr1Idx: " + str(arr1Idx))
-        #loopLine += 1
 
         fTemp2 = (1 - alpha) * tmp2 + alpha * fTemp2
         fTemp2 = round(fTemp2, 1)
