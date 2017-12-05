@@ -67,12 +67,6 @@ try:
     volts = 0
     timeNow = time.time()
 
-
-    t1Arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    t2Arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    t3Arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    arr1Idx = arr2Idx = arr3Idx = 0
-
     while continue1 == True:
 
         loopLine = line
@@ -105,48 +99,22 @@ try:
         loopLine += 1
 
         tmp1 = 100 * DAQC.getADC(0, 0) - 50
-        tmp1 = round(tmp1, 1)
+        tmp1 = round(tmp1, 2)
         tmp2 = 0.0
-# 100 * DAQC.getADC(0, 1) - 50
-        tmp2 = round(tmp2, 1)
+        tmp2 = round(tmp2, 2)
         tmp3 = 100 * DAQC.getADC(0, 2) - 50
         tmp3 = 0.0
-#round(tmp3, 1)
+
         volts = DAQC.getADC(0, 3)
 
         fTemp1 = (1 - alpha) * tmp1 + alpha * fTemp1
         fTemp1 = round(fTemp1, 1)
 
-        t1Arr[arr1Idx] = fTemp1
-        if arr1Idx == 9:
-            arr1Idx = 0
-        else:
-            arr1Idx += 1
-
-        v1 = 0
-        for tmp in t1Arr:
-            v1 += tmp
-        v1 = v1 / 10
-        #stdscr.addstr(loopLine, 0, "v1: " + str(v1) + " arr1Idx: " + str(arr1Idx))
-        #loopLine += 1
-
         fTemp2 = (1 - alpha) * tmp2 + alpha * fTemp2
         fTemp2 = round(fTemp2, 1)
 
-        t2Arr[arr2Idx] = fTemp2
-        if arr2Idx == 9:
-            arr2Idx = 0
-        else:
-            arr2Idx += 1
-
         fTemp3 = (1 - alpha) * tmp3 + alpha * fTemp3
         fTemp3 = round(fTemp3, 1)
-
-        t3Arr[arr3Idx] = fTemp3
-        if arr3Idx == 9:
-            arr3Idx = 0
-        else:
-            arr3Idx += 1
 
         fVolts = (1 - alpha) * volts + alpha * fVolts
         fVolts = round(fVolts, 1)

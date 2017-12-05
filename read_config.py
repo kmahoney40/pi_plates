@@ -7,7 +7,6 @@ from datetime import datetime
 import json
 
 def readConfig(line):
-
     try:
         stdscr = curses.initscr()
         curses.noecho()
