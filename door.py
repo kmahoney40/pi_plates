@@ -49,4 +49,3 @@ def getDoorCmnd(line, url, override):
         stdscr.addstr(line + localLine, 0, "END: getDoorCmmd() - " + str(datetime.utcnow()))
         localLine += 3
     return localLine
-
