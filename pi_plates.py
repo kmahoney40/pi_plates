@@ -99,11 +99,12 @@ try:
         loopLine += 1
 
         tmp1 = 100 * DAQC.getADC(0, 0) - 50
-        tmp1 = round(tmp1, 1)
+        tmp1 = round(tmp1, 2)
         tmp2 = 100 * DAQC.getADC(0, 1) - 50
-        tmp2 = round(tmp2, 1)
+        tmp2 = round(tmp2, 2)
         tmp3 = 100 * DAQC.getADC(0, 2) - 50
-        tmp3 = round(tmp3, 1)
+        tmp3 = round(tmp3, 2)
+
         volts = DAQC.getADC(0, 3)
 
         fTemp1 = (1 - alpha) * tmp1 + alpha * fTemp1
