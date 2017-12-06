@@ -23,22 +23,21 @@ def getDoorCmnd(line, url, override):
         stdscr.addstr(line + localLine, 0, "fullurl: " + fullUrl)
         localLine += 1
         ret = requests.get(url + 'door')
-        # doorCmnd = False;
 
         stdscr.addstr(line + localLine, 0, str(ret.text))
         localLine += 1
 
+        # ret.text should be json or convertible to json, then we can get cmnd and the read config
+        # variable
         if str(ret.text).find('true') < -1 or override == True:
-            # doorCmnd = True
             RELAY.relayON(0, 5)
             time.sleep(0.5)
             RELAY.relayOFF(0, 5)
         else:
-            # doorCmnd = False;
             RELAY.relayOFF(0, 5)
 
     except Exception, ex:
-        # pring the exception and keep going
+        # print the exception and keep going
         stdscr.addstr(line + localLine, 0, "getDoorCmnd() outter exception: " + ex.message)
         localLine += 3
     else:
