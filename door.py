@@ -23,18 +23,15 @@ def getDoorCmnd(line, url, override):
         stdscr.addstr(line + localLine, 0, "fullurl: " + fullUrl)
         localLine += 1
         ret = requests.get(url + 'door')
-        # doorCmnd = False;
 
         stdscr.addstr(line + localLine, 0, str(ret.text))
         localLine += 1
 
         if str(ret.text).find('true') < -1 or override == True:
-            # doorCmnd = True
             RELAY.relayON(0, 5)
             time.sleep(0.5)
             RELAY.relayOFF(0, 5)
         else:
-            # doorCmnd = False;
             RELAY.relayOFF(0, 5)
 
     except Exception, ex:
