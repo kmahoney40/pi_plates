@@ -78,19 +78,18 @@ try:
         loopLine += 1
 
         readChar = stdscr.getch()
-        if readChar == ord('q'):
+        if readChar == ord('q') or readChar == ord('Q'):
             stdscr.addstr(loopLine, 0, "Quit")
             loopLine += 1
             continue1 = False
-        if readChar == ord('d'):
+        if readChar == ord('d') or readChar == ord('D'):
             doorOverride = True
-    
 
         myTime = time.localtime(time.time())
         myMin = myTime.tm_min
         mySec = myTime.tm_sec
 
-        if mySec % modSec == 0:
+        if mySec % modSec == 0 or doorOverride == True:
             loopLine += door.getDoorCmnd(loopLine, url, doorOverride)
             doorOverride = False
         else:
@@ -99,11 +98,11 @@ try:
         loopLine += 1
 
         tmp1 = 100 * DAQC.getADC(0, 0) - 50
-        tmp1 = round(tmp1, 2)
+        tmp1 = round(tmp1, 1)
         tmp2 = 100 * DAQC.getADC(0, 1) - 50
-        tmp2 = round(tmp2, 2)
+        tmp2 = round(tmp2, 1)
         tmp3 = 100 * DAQC.getADC(0, 2) - 50
-        tmp3 = round(tmp3, 2)
+        tmp3 = round(tmp3, 1)
 
         volts = DAQC.getADC(0, 3)
 
@@ -128,77 +127,87 @@ try:
 
         loopLine += 2
         currentMod = myMin % modMin
-        stdscr.addstr(loopLine, 0, "min: " + str(myMin) + " sec: " + str(mySec) + " mod: " + str(currentMod) + " tempFanCounter: " + str(tempFanCounter) )
+        stdscr.addstr(loopLine, 0, "min: " + str(myMin) + " sec: " + str(mySec) + " mod: " + str(currentMod) + " tempFanCounter: " + str(tempFanCounter) + "  ")
         loopLine += 2
 
-        if currentMod == 0 and tempFanCounter == 0:
+
+        fanChanged = False
+        try:
+            #tempFanCounter = 1
+            #stdscr.addstr(loopLine, 0, "tempFanCounter inside" + str(tempFanCounter) + "          ")
+            loopLine += 1
+
+            strtmp1 = str(fTemp1)
+            strtmp2 = str(fTemp2)
+            strtmp3 = str(fTemp3)
+
+            stdscr.addstr(loopLine, 0, "sentTmp1: " + strtmp1)
+            loopLine += 1
+            stdscr.addstr(loopLine, 0, "sentTmp2: " + strtmp2)
+            loopLine += 1
+            stdscr.addstr(loopLine, 0, "sentTmp3: " + strtmp3)
+            loopLine += 1
+
+            if fVolts < voltageTrigger:
+                RELAY.relayON(0, 7)
+                chargerOn = True
+            else:
+                RELAY.relayOFF(0, 7)
+                chargerOn = False
+
+            if fanOn == False and fTemp1 > fanChangeTemp + fanDelta:
+                RELAY.relayON(0, 3)
+                fanOn = True
+                fanChanged = True
+            elif fanOn == True and fTemp1 < fanChangeTemp - fanDelta:
+                RELAY.relayOFF(0, 3)
+                fanOn = False
+                fanChanged = True
+        except Exception, ex:
+            stdscr.addstr(loopLine, 0, "Exception: " + ex.message)
+        finally:
+            var = 3
+
+        if fanChanged or ( currentMod == 0 and tempFanCounter == 0 ):
+            fanChanged = False
+            tempFanCounter = 1
             try:
-                tempFanCounter = 1
-                stdscr.addstr(loopLine, 0, "tempFanCounter inside" + str(tempFanCounter) + "          ")
-                loopLine += 1
-
-                strtmp1 = str(fTemp1)
-                strtmp2 = str(fTemp2)
-                strtmp3 = str(fTemp3)
-
-                stdscr.addstr(loopLine, 0, "sentTmp1: " + strtmp1)
-                loopLine += 1
-                stdscr.addstr(loopLine, 0, "sentTmp2: " + strtmp2)
-                loopLine += 1
-                stdscr.addstr(loopLine, 0, "sentTmp3: " + strtmp3)
-                loopLine += 1
-
-                if fVolts < voltageTrigger:
-                    RELAY.relayON(0, 7)
-                    chargerOn = True
-                else:
-                    RELAY.relayOFF(0, 7)
-                    chargerOn = False
-
-                if fTemp1 > fanChangeTemp + fanDelta:
-                    RELAY.relayON(0, 3)
-                    fanOn = True
-                elif fTemp1 < fanChangeTemp - fanDelta:
-                    RELAY.relayOFF(0, 3)
-                    fanOn = False
-
-                payload = {"TEMP_1": fTemp1, "TEMP_2": fTemp2, "TEMP_3": fTemp3, "FAN_ON": fanOn, "CHARGER_ON": chargerOn,
-                           "VOLTAGE": fVolts, "GMT": str(datetime.utcnow())}
+                payload = {"TEMP_1": fTemp1, "TEMP_2": fTemp2, "TEMP_3": fTemp3, "FAN_ON": fanOn, "CHARGER_ON": chargerOn, "VOLTAGE": fVolts, "GMT": str(datetime.utcnow())}
                 stdscr.addstr(loopLine, 0, "payload: " + json.dumps(payload))
                 loopLine += 2
 
                 stdscr.addstr(loopLine, 0, "state: " + str(RELAY.relaySTATE(0)))
                 loopLine += 1
-            except Exception, ex:
-                stdscr.addstr(loopLine, 0, "Exception: " + ex.message)
-            finally:
-                var = 3
-            try:
+
                 headers = {'content-type': 'application/json'}
                 ret = requests.post(url + 'piplates', json=json.dumps(payload), headers=headers)
                 stdscr.addstr(loopLine, 0, "return: " + str(ret.status_code) + " " + ret.text)
+                loopLine += 1
             except Exception, ex:
                 loopLine += 2
                 stdscr.addstr(loopLine, 0, "Exception: " + ex.message)
-                loopLine += 1
+                loopLine += 2
             else:
                 loopLine += 2
                 stdscr.addstr(loopLine, 0, "Send temps all good")
-                loopLine += 1
+                loopLine += 2
             finally:
                 loopLine += 2
                 stdscr.addstr(loopLine, 0, "datetime: " + str(datetime.utcnow()))
-                loopLine += 1
+                loopLine += 2
         else:
             if tempFanCounter > 0:
                 tempFanCounter += 1
                 if tempFanCounter > 60:
                     tempFanCounter = 0
-            stdscr.addstr(loopLine, 0, "tempFanCounter else: " + str(tempFanCounter) + "                    ")
+            #stdscr.addstr(loopLine, 0, "tempFanCounter else: " + str(tempFanCounter) + "                       ")
             loopLine += 1
 
         loopLine += 1
         time.sleep(1)
 
 finally:
+    # Turn fan and charger off when program stops
+    RELAY.relayOFF(0, 3)
+    RELAY.relayOFF(0, 7)
     curses.endwin()
