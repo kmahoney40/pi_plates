@@ -164,7 +164,7 @@ try:
                 fanOn = False
                 fanChanged = True
         except Exception, ex:
-            stdscr.addstr(loopLine, 0, "Exception: " + ex.message)
+            stdscr.addstr(loopLine, 0, "Exception: " + repr(ex))
         finally:
             var = 3
 
@@ -185,7 +185,7 @@ try:
                 loopLine += 1
             except Exception, ex:
                 loopLine += 2
-                stdscr.addstr(loopLine, 0, "Exception: " + ex.message)
+                stdscr.addstr(loopLine, 0, "Exception: " + repr(ex))
                 loopLine += 2
             else:
                 loopLine += 2

@@ -38,7 +38,7 @@ def getDoorCmnd(line, url, override):
 
     except Exception, ex:
         # print the exception and keep going
-        stdscr.addstr(line + localLine, 0, "getDoorCmnd() outter exception: " + ex.message)
+        stdscr.addstr(line + localLine, 0, "getDoorCmnd() exception: " + repr(ex))
         localLine += 3
     else:
         # all good do nothing
